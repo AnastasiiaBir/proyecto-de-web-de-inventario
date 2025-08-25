@@ -1,0 +1,49 @@
+<!-- views/user/localizaciones.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Localizaciones</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1 style="text-align:center;">Localizaciones</h1>
+
+  <input type="text" id="search" placeholder="Buscar localización..." onkeyup="filterTable()">
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Dirección</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% localizaciones.forEach(l => { %>
+      <tr>
+        <td><%= l.id %></td>
+        <td><%= l.nombre %></td>
+        <td><%= l.direccion || '' %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div style="text-align:center; margin-top: 20px;">
+    <a href="/user/dashboard">Volver al dashboard</a>
+  </div>
+
+  <script>
+    function filterTable() {
+      const filter = document.getElementById('search').value.toLowerCase();
+      const rows = document.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const nombre = row.cells[1].textContent.toLowerCase();
+        const direccion = row.cells[2].textContent.toLowerCase();
+        row.style.display = (nombre.includes(filter) || direccion.includes(filter)) ? '' : 'none';
+      });
+   }
+  </script>
+</body>
+</html>

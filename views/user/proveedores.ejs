@@ -1,0 +1,52 @@
+<!-- views/user/proveedores.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Proveedores</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1 style="text-align:center;">Proveedores</h1>
+
+  <input type="text" id="search" placeholder="Buscar proveedor..." onkeyup="filterTable()">
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Contacto</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% proveedores.forEach(p => { %>
+      <tr>
+        <td><%= p.id %></td>
+        <td><%= p.nombre %></td>
+        <td><%= p.contacto || '' %></td>
+        <td><%= p.telefono || '' %></td>
+        <td><%= p.email || '' %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <a href="/user/dashboard">Volver al dashboard</a>
+
+  <script>
+    function filterTable() {
+      const filter = document.getElementById('search').value.toLowerCase();
+      const rows = document.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const nombre = row.cells[1].textContent.toLowerCase();
+        const telefono = row.cells[3].textContent.toLowerCase();
+        const email = row.cells[4].textContent.toLowerCase();
+        row.style.display = (nombre.includes(filter) || telefono.includes(filter) || email.includes(filter)) ? '' : 'none';
+      });
+    }
+  </script>  
+</body>
+</html>

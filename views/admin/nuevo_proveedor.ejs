@@ -1,0 +1,21 @@
+<!-- views/admin/nuevo_proveedor.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nuevo Proveedor</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Añadir Nuevo Proveedor</h1>
+  <form action="/proveedores/nuevo" method="POST">
+    <input type="text" name="nombre" placeholder="Nombre" required><br>
+    <input type="text" name="telefono" placeholder="Teléfono"><br>
+    <input type="email" name="email" placeholder="Email"><br>
+    <input type="text" name="direccion" placeholder="Dirección"><br>
+    <input type="text" name="ciudad" placeholder="Ciudad"><br>
+    <button type="submit">Añadir</button>
+  </form>
+  <a href="/admin/proveedores">Volver al panel</a>
+</body>
+</html>

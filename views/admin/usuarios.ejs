@@ -1,0 +1,93 @@
+<!-- views/admin/usuarios.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Usuarios</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .button-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    .export-container { position: relative; display: inline-block; }
+    .export-dropdown {
+      display: none; position: absolute; top: 100%; left: 0;
+      background: #fff; border: 1px solid #ccc; border-radius: 5px;
+      min-width: 140px; box-shadow: 0 2px 5px rgba(0,0,0,.15);
+      z-index: 1000;
+    }
+    .export-option { display: block; padding: 8px 12px; text-decoration: none; color: #333; }
+    .export-option:hover { background: #f0f0f0; }
+    .action-btn { margin-right: 5px; }
+    input.edit-input, select.edit-input { width: 100%; box-sizing: border-box; }
+    .filters { margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap; }
+    .filters input, .filters select { padding: 5px; }
+    .filters button { padding: 5px 10px; }
+  </style>
+</head>
+<body>
+  <h1>Usuarios</h1>
+
+  <div class="button-group">
+    <div class="export-container">
+      <button id="btnExportar" type="button">Exportar ▼</button>
+      <div id="exportMenu" class="export-dropdown">
+        <a href="/admin/usuarios/exportar/excel" class="export-option">📊 Excel</a>
+        <a href="/admin/usuarios/exportar/pdf" class="export-option">📄 PDF</a>
+      </div>
+    </div>
+    <a href="/admin/usuarios/nuevo"><button>Añadir Usuario</button></a>
+  </div>
+
+  <!-- Фильтры -->
+  <div class="filters">
+    <input type="text" id="filterNombre" placeholder="Nombre">
+    <input type="text" id="filterApellidos" placeholder="Apellidos">
+    <input type="text" id="filterEmail" placeholder="Email">
+    <input type="text" id="filterTelefono" placeholder="Teléfono">
+    <select id="filterRol">
+      <option value="">Rol</option>
+      <option value="1">Administrador</option>
+      <option value="2">Usuario</option>
+    </select>
+    <button onclick="applyFilters()">Filtrar</button>
+    <button onclick="resetFilters()">Resetear</button>
+  </div>
+
+  <input type="text" id="search" placeholder="Buscar usuario..." onkeyup="filterTable()">
+
+  <table id="usuariosTable" border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Apellidos</th>
+        <th>Email</th>
+        <th>Teléfono</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% usuarios.forEach(u => { %>
+        <% let rolNombre = (u.rol_id === 1) ? 'Administrador' : 'Usuario'; %>
+        <tr data-id="<%= u.id %>" data-rol="<%= u.rol_id %>">
+          <td><%= u.id %></td>
+          <td class="editable" data-field="nombre"><%= u.nombre %></td>
+          <td class="editable" data-field="apellidos"><%= u.apellidos %></td>
+          <td class="editable" data-field="email"><%= u.email %></td>
+          <td class="editable" data-field="telefono"><%= u.telefono %></td>
+          <td class="editable" data-field="rol_id" data-rol-id="<%= u.rol_id %>"><%= rolNombre %></td>
+          <td>
+            <button class="save-btn" style="display:none;">Guardar</button>
+            <button class="delete-btn">Eliminar</button>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <br>
+  <a href="/admin/dashboard">Volver al panel</a>
+
+  <script src="/js/usuarios.js"></script>
+</body>
+</html>

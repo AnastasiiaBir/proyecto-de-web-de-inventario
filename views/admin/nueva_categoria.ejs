@@ -1,0 +1,17 @@
+<!-- views/admin/nueva_categoria.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nueva Categoría</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Añadir Nueva Categoría</h1>
+  <form action="/categorias/nuevo" method="POST">
+    <input type="text" name="nombre" placeholder="Nombre" required><br>
+    <button type="submit">Añadir</button>
+  </form>
+  <a href="/admin/categorias">Volver a Categorías</a>
+</body>
+</html>
