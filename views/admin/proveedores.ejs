@@ -1,0 +1,72 @@
+<!-- views/admin/proveedores.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Proveedores</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .button-group { display: flex; gap: 10px; margin-bottom: 20px; }
+    .export-container { position: relative; display: inline-block; }
+    .export-dropdown {
+      display: none; position: absolute; top: 100%; left: 0;
+      background: #fff; border: 1px solid #ccc; border-radius: 5px;
+      min-width: 140px; box-shadow: 0 2px 5px rgba(0,0,0,.15); z-index: 1000;
+    }
+    .export-option { display: block; padding: 8px 12px; text-decoration: none; color: #333; }
+    .export-option:hover { background: #f0f0f0; }
+    .editable { cursor: pointer; }
+    .save-btn { display: none; margin-right: 5px; }
+    .delete-btn { margin-left: 5px; }
+    .filters { margin-bottom: 10px; }
+    .filter-input { margin-right: 5px; margin-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Proveedores</h1>
+
+  <div class="button-group">
+    <div class="export-container">
+      <button id="btnExportar" type="button">Exportar ▼</button>
+      <div id="exportMenu" class="export-dropdown">
+        <a href="/admin/proveedores/exportar/excel" class="export-option">📊 Excel</a>
+        <a href="/admin/proveedores/exportar/pdf" class="export-option">📄 PDF</a>
+      </div>
+    </div>
+    <a href="/admin/proveedores/nuevo"><button>Añadir Proveedor</button></a>
+  </div>
+
+  <input type="text" id="search" placeholder="Buscar proveedor..." onkeyup="filterTable()">
+
+  <table id="tablaProveedores" border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% proveedores.forEach(p => { %>
+      <tr data-id="<%= p.id %>">
+        <td><%= p.id %></td>
+        <td class="editable"><%= p.nombre %></td>
+        <td class="editable"><%= p.telefono %></td>
+        <td class="editable"><%= p.email %></td>
+        <td>
+          <button class="save-btn" style="display:none;">Guardar</button>
+          <button class="delete-btn">Eliminar</button>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <br>
+  <a href="/admin/dashboard">Volver al panel</a>
+
+  <script src="/js/proveedores.js"></script>
+</body>
+</html>

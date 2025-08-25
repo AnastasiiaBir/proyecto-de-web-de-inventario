@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Perfil Administrador</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .profile-container { max-width: 500px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+    .profile-field { margin-bottom: 10px; }
+    .profile-field label { display: block; font-weight: bold; margin-bottom: 3px; }
+    .profile-field input { width: 100%; padding: 5px; }
+    .btn { padding: 8px 15px; margin-top: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Perfil Administrador</h1>
+
+  <div class="profile-container">
+    <div class="profile-field">
+      <label>Nombre:</label>
+      <input type="text" id="nombre" value="<%= user.nombre %>">
+    </div>
+    <div class="profile-field">
+      <label>Email:</label>
+      <input type="text" id="email" value="<%= user.email %>">
+    </div>
+    <div class="profile-field">
+      <label>Contraseña:</label>
+      <input type="password" id="password" placeholder="Nueva contraseña">
+    </div>
+    <button class="btn" id="saveProfile">Guardar Cambios</button>
+  </div>
+
+  <br>
+  <a href="/admin/dashboard">Volver al panel</a>
+
+<script>
+document.getElementById('saveProfile').addEventListener('click', () => {
+  const data = {
+    nombre: document.getElementById('nombre').value,
+    email: document.getElementById('email').value,
+    password: document.getElementById('password').value
+  };
+
+  fetch('/admin/perfil/editar', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  }).then(res=>res.json())
+    .then(res=>{
+      if(res.success) alert('Perfil actualizado correctamente');
+      else alert('Error al actualizar perfil');
+    });
+});
+</script>
+</body>
+</html>

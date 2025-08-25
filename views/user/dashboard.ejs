@@ -1,0 +1,29 @@
+<!-- views/user/dashboard.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Usuario</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .dash-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 50px; }
+    .dash-buttons a { padding: 50px 40px; font-size: 1.5em; background: #4CAF50; color: #fff; border-radius: 15px; text-align: center; display: inline-block; width: 250px; text-decoration: none; transition: 0.3s; }
+    .dash-buttons a:hover { background: #45a049; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Bienvenido <%= user.email %></h1>
+  <div class="dash-buttons">
+    <a href="/user/productos">Productos</a>
+    <a href="/user/proveedores">Proveedores</a>
+    <a href="/user/categorias">Categorías</a>
+    <a href="/user/localizaciones">Localizaciones</a>
+    <a href="/user/perfil">Perfil</a>
+  </div>
+  <div style="text-align:center;margin-top:24px">
+    <a href="/logout">Salir</a>
+  </div>
+</body>
+</html>
+</body>
+</html>

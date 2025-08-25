@@ -1,0 +1,46 @@
+<!-- views/user/categorias.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Categorías</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1 style="text-align:center;">Categorías</h1>
+
+  <input type="text" id="search" placeholder="Buscar categoría..." onkeyup="filterTable()">
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% categorias.forEach(c => { %>
+      <tr>
+        <td><%= c.id %></td>
+        <td><%= c.nombre %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div style="text-align:center; margin-top: 20px;">
+    <a href="/user/dashboard">Volver al dashboard</a>
+  </div>
+
+  <script>
+    function filterTable() {
+      const filter = document.getElementById('search').value.toLowerCase();
+      const rows = document.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const nombre = row.cells[1].textContent.toLowerCase();
+        row.style.display = nombre.includes(filter) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

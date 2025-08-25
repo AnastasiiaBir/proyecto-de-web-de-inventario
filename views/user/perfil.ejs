@@ -1,0 +1,31 @@
+<!-- views/user/perfil.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Perfil</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1 style="text-align:center;">Mi Perfil</h1>
+
+  <table>
+    <tbody>
+      <tr>
+        <th>Nombre:</th>
+        <td><%= user.nombre %></td>
+      </tr>
+      <tr>
+        <th>Email:</th>
+        <td><%= user.email %></td>
+      </tr>
+      <tr>
+        <th>Rol:</th>
+        <td><%= user.rol_id === 1 ? 'Administrador' : 'Usuario' %></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <a href="/user/dashboard">Volver al dashboard</a>
+</body>
+</html>
