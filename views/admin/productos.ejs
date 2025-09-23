@@ -20,6 +20,7 @@
     .delete-btn { margin-left: 5px; }
     .filters { margin-bottom: 10px; }
     .filter-input { margin-right: 5px; margin-bottom: 5px; }
+    .low-stock { background-color: #ffcccc; }
   </style>
 </head>
 <body>
@@ -36,16 +37,18 @@
     <a href="/admin/productos/nuevo"><button>Añadir Producto</button></a>
   </div>
 
-  <div class="filters">
-    <input type="text" id="filterNombre" placeholder="Nombre" class="filter-input">
-    <input type="text" id="filterMarca" placeholder="Marca" class="filter-input">
-    <input type="text" id="filterCategoria" placeholder="Categoría" class="filter-input">
-    <input type="text" id="filterProveedor" placeholder="Proveedor" class="filter-input">
-    <input type="number" id="filterPrecio" placeholder="Precio máximo" class="filter-input">
-    <input type="number" id="filterCosto" placeholder="Costo máximo" class="filter-input">
-    <input type="number" id="filterStock" placeholder="Stock mínimo" class="filter-input">
-    <button id="btnFiltrar" class="btn">Filtrar</button>
-  </div>
+   <!-- Filtros a través de GET -->
+  <form method="GET" action="/admin/productos" class="filters">
+    <input type="text" name="nombre" placeholder="Nombre" value="<%= req.query.nombre || '' %>" class="filter-input">
+    <input type="text" name="marca" placeholder="Marca" value="<%= req.query.marca || '' %>" class="filter-input">
+    <input type="text" name="categoria" placeholder="Categoría" value="<%= req.query.categoria || '' %>" class="filter-input">
+    <input type="text" name="proveedor" placeholder="Proveedor" value="<%= req.query.proveedor || '' %>" class="filter-input">
+    <input type="number" name="precioMax" placeholder="Precio máximo" value="<%= req.query.precioMax || '' %>" class="filter-input">
+    <input type="number" name="costoMax" placeholder="Costo máximo" value="<%= req.query.costoMax || '' %>" class="filter-input">
+    <input type="number" name="stockMin" placeholder="Stock mínimo" value="<%= req.query.stockMin || '' %>" class="filter-input">
+    <input type="text" name="localizacion" placeholder="Localización" value="<%= req.query.localizacion || '' %>" class="filter-input">
+    <button type="submit">Filtrar</button>
+  </form>
 
   <table id="tablaProductos" border="1">
     <thead>
@@ -54,27 +57,41 @@
         <th>Nombre</th>
         <th>Marca</th>
         <th>Categoría</th>
-        <th>Proveedor</th>
+        <th>Proveedor(es)</th>
         <th>Precio</th>
         <th>Costo</th>
+        <th>Medida</th>
         <th>Stock</th>
+        <th>Stock mínimo</th>
+        <th>Localización</th>
+        <th>Observaciones</th>
         <th>Acciones</th>
       </tr>
     </thead>
     <tbody>
       <% productos.forEach(p => { %>
-      <tr data-id="<%= p.id %>">
-        <tr data-id="<%= p.id %>">
+      <tr data-id="<%= p.id %>" class="<%= p.stock < p.stock_minimo ? 'low-stock' : '' %>">
         <td class="editable" data-field="id"><%= p.id %></td>
         <td class="editable" data-field="nombre"><%= p.nombre %></td>
         <td class="editable" data-field="marca"><%= p.marca %></td>
-        <td class="editable" data-field="categoria_nombre"><%= p.categoria_nombre || '' %></td>
-        <td class="editable" data-field="proveedor_nombre"><%= p.proveedor_nombre || '' %></td>
+        <td class="editable" data-field="categoria_nombre"><%= p.categoria_nombre %></td>
+        <td class="editable" data-field="proveedor_nombre"><%= p.proveedor_nombre %></td>
         <td class="editable" data-field="precio"><%= p.precio %></td>
         <td class="editable" data-field="costo"><%= p.costo %></td>
-        <td class="editable" data-field="stock"><%= p.stock %></td>
+        <td class="editable" data-field="medida"><%= p.medida || '' %></td>
         <td>
-          <button class="save-btn">Guardar</button>
+          <% if (p.stock < 1) { %>
+            <span style="color:red;">Нет в наличии</span>
+          <% } else { %>
+            <%= p.stock %>
+          <% } %>
+        </td>
+        <td><%= p.stock_minimo %></td>
+        <td class="editable" data-field="localizacion_nombre"><%= p.localizacion_nombre %></td>
+        <td class="editable" data-field="observaciones"><%= p.observaciones || '' %></td>
+        <td>
+          <button class="save-btn" style="display:none;">Guardar</button>
+          <button class="cancel-btn" style="display:none;">Cancelar</button>
           <button class="delete-btn">Eliminar</button>
         </td>
       </tr>
@@ -84,6 +101,66 @@
 
   <br>
   <a href="/admin/dashboard">Volver al panel</a>
+
+
+  <script>
+document.querySelectorAll('.editable-cell').forEach(cell => {
+  cell.addEventListener('dblclick', async () => {
+    const productoId = cell.dataset.productoId;
+    const field = cell.dataset.field;
+
+    const res = await fetch('/admin/productos/options');
+    const data = await res.json();
+
+    let options = [];
+    if (field === 'categoria_id') options = data.categorias;
+    if (field === 'proveedor_id') options = data.proveedores;
+    if (field === 'localizacion_id') options = data.localizaciones;
+
+    const select = document.createElement('select');
+    options.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.id;
+      option.textContent = opt.nombre;
+      if (opt.nombre === cell.textContent.trim()) option.selected = true;
+      select.appendChild(option);
+    });
+
+    cell.textContent = '';
+    cell.appendChild(select);
+    select.focus();
+
+    select.addEventListener('change', async () => {
+      const newId = select.value;
+      const body = {};
+      body[field] = newId;
+
+      const resp = await fetch(`/admin/productos/${productoId}/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const result = await resp.json();
+      if (result.success) {
+        cell.textContent = select.selectedOptions[0].textContent;
+      } else {
+        alert('Error al actualizar');
+        cell.textContent = select.selectedOptions[0].textContent;
+      }
+    });
+
+    select.addEventListener('blur', () => {
+      cell.textContent = select.selectedOptions[0].textContent;
+    });
+  });
+});
+</script>
+
+  <script>
+    window.categorias = JSON.parse('<%- JSON.stringify(categorias || []) %>');
+    window.proveedores = JSON.parse('<%- JSON.stringify(proveedores || []) %>');;
+    window.localizaciones = JSON.parse('<%- JSON.stringify(localizaciones || []) %>');
+  </script>
 
   <script src="/js/productos.js"></script>
 </body>

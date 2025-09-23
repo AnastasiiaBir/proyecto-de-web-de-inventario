@@ -44,15 +44,13 @@
     <input type="text" id="filterEmail" placeholder="Email">
     <input type="text" id="filterTelefono" placeholder="Teléfono">
     <select id="filterRol">
-      <option value="">Rol</option>
+      <option value="">— Todos —</option>
       <option value="1">Administrador</option>
       <option value="2">Usuario</option>
     </select>
-    <button onclick="applyFilters()">Filtrar</button>
-    <button onclick="resetFilters()">Resetear</button>
+    <button id="btnFiltrarUsuarios">Filtrar</button>
+    <button id="btnResetUsuarios">Resetear</button>
   </div>
-
-  <input type="text" id="search" placeholder="Buscar usuario..." onkeyup="filterTable()">
 
   <table id="usuariosTable" border="1">
     <thead>
@@ -68,16 +66,20 @@
     </thead>
     <tbody>
       <% usuarios.forEach(u => { %>
-        <% let rolNombre = (u.rol_id === 1) ? 'Administrador' : 'Usuario'; %>
-        <tr data-id="<%= u.id %>" data-rol="<%= u.rol_id %>">
+        <!-- <% let rolNombre = (u.rol_id === 1) ? 'Administrador' : 'Usuario'; %> -->
+        <tr
+          data-id="<%= u.id %>" 
+          data-rol="<%= u.rol_id %>" 
+          data-foto="<%= u.foto %>">
           <td><%= u.id %></td>
           <td class="editable" data-field="nombre"><%= u.nombre %></td>
           <td class="editable" data-field="apellidos"><%= u.apellidos %></td>
           <td class="editable" data-field="email"><%= u.email %></td>
           <td class="editable" data-field="telefono"><%= u.telefono %></td>
-          <td class="editable" data-field="rol_id" data-rol-id="<%= u.rol_id %>"><%= rolNombre %></td>
+          <td data-field="rol_id"><%= u.rol_nombre %></td>
           <td>
             <button class="save-btn" style="display:none;">Guardar</button>
+            <button class="reset-btn">Resetear contraseña</button>
             <button class="delete-btn">Eliminar</button>
           </td>
         </tr>

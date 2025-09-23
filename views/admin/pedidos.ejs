@@ -1,0 +1,77 @@
+<!-- views/admin/pedidos.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pedidos de Usuarios</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    .detalle-row { display: none; background-color: #fafafa; }
+    .detalle-row td { text-align: left; }
+    select, button { padding: 4px; margin: 2px 0; }
+    .acciones-form { display: flex; flex-direction: column; align-items: center; }
+    .acciones-form form { margin: 2px 0; }
+    .acciones-form a { margin-top: 4px; text-decoration: none; color: blue; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Pedidos de Usuarios</h1>
+
+  <table id="tablaPedidos">
+    <thead>
+      <tr>
+        <th>Número</th>
+        <th>Fecha</th>
+        <th>Usuario</th>
+        <th>Email</th>
+        <th>Estado</th>
+        <th>Total (€)</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% pedidos.forEach(function(pedido) { %>
+        <tr>
+          <td><%= pedido.id %></td>
+          <td><%= pedido.fecha.toISOString().slice(0,10) %></td>
+          <td><%= pedido.usuario_nombre %></td>
+          <td><%= pedido.usuario_email %></td>
+          <td>
+            <form action="/admin/pedidos/<%= pedido.id %>/estado" method="POST">
+              <select name="estado" onchange="this.form.submit()">
+                <% const estados = ['pendiente', 'completado']; %>
+                <% estados.forEach(e => { %>
+                  <option value="<%= e %>" <%= pedido.estado === e ? 'selected' : '' %> >
+                    <%= e.charAt(0).toUpperCase() + e.slice(1) %>
+                  </option>
+                <% }); %>
+              </select>
+            </form>
+          </td>
+          <td>€<%= pedido.total.toFixed(2) %></td>
+          <td class="acciones-form">
+
+            <!-- Форма для изменения состояния trabajo -->
+            <form action="/admin/pedidos/<%= pedido.id %>/trabajo" method="POST">
+              <input type="hidden" name="trabajo" value="<%= pedido.trabajo === 'en_trabajo' ? 'finalizado' : 'en_trabajo' %>">
+              <button type="submit">
+                <%= pedido.trabajo === 'en_trabajo' ? 'En trabajo' : 'Finalizado' %>
+              </button>
+            </form>
+
+            <!-- Ссылка на отдельную страницу с деталями заказа -->
+            <a href="/admin/pedidos/<%= pedido.id %>/detalle-page">Ver pedido</a>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+  
+  <div style="text-align:center; margin-top:20px;">
+    <a href="/admin/dashboard">Volver al dashboard</a>
+  </div>
+</body>
+</html>

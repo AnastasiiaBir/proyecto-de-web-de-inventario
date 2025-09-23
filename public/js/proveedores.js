@@ -32,20 +32,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnFiltrar && table) {
     btnFiltrar.addEventListener('click', () => {
       const nombre = (document.getElementById('filterNombre').value || '').toLowerCase();
+      const contacto = (document.getElementById('filterCiudad').value || '').toLowerCase();
       const telefono = (document.getElementById('filterTelefono').value || '').toLowerCase();
       const email = (document.getElementById('filterEmail').value || '').toLowerCase();
-      const direccion = (document.getElementById('filterDireccion').value || '').toLowerCase();
-      const ciudad = (document.getElementById('filterCiudad').value || '').toLowerCase();
+
 
       let shown = 0;
       table.querySelectorAll('tbody tr').forEach(row => {
         const cells = row.children;
         const match =
           cells[1].innerText.toLowerCase().includes(nombre) &&
-          cells[2].innerText.toLowerCase().includes(telefono) &&
-          cells[3].innerText.toLowerCase().includes(email) &&
-          cells[4].innerText.toLowerCase().includes(direccion) &&
-          cells[5].innerText.toLowerCase().includes(ciudad);
+          cells[2].innerText.toLowerCase().includes(contacto) &&
+          cells[3].innerText.toLowerCase().includes(telefono) &&
+          cells[4].innerText.toLowerCase().includes(email);
         row.style.display = match ? '' : 'none';
         if(match) shown++;
       });
@@ -64,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Клик по ячейке для редактирования
       cells.forEach(cell => {
-        cell.addEventListener('click', () => {
+        cell.addEventListener('dblclick', () => {
           if(!cell.querySelector('input')) {
             const val = cell.textContent;
             cell.innerHTML = `<input type="text" value="${val}" style="width:100%;">`;
@@ -78,8 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.addEventListener('click', () => {
           const data = {};
           cells.forEach(cell => {
-            const input = cell.querySelector('input');
-            if(input) data[cell.dataset.field] = input.value;
+            if(cell.querySelector('input')) {
+              data[cell.dataset.field] = cell.querySelector('input').value;
+            } else {
+              data[cell.dataset.field] = cell.textContent;
+            }
           });
 
           fetch('/admin/proveedores/editar/' + proveedorId, {

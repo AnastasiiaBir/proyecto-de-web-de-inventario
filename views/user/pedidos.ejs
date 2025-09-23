@@ -1,0 +1,92 @@
+<!-- views/user/pedidos.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pedidos</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; }
+    .total-row { font-weight: bold; }
+    button { padding: 8px 16px; margin-top: 10px; }
+    .pedido-container { border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; }
+    .pedido-title { font-weight: bold; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+<h1 style="text-align:center;">Lista de Pedidos</h1>
+
+<div id="pedidosContainer">
+  <% if (!pedidos || pedidos.length === 0) { %>
+    <p style="text-align:center;">No hay pedidos.</p>
+  <% } %>
+
+  <% pedidos.forEach((pedido) => { %>
+    <div class="pedido-container" data-pedido-id="<%= pedido.id %>">
+      <div class="pedido-title">Pedido ID: <%= pedido.id %> | Estado: <%= pedido.estado %></div>
+      <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Cantidad</th>
+              <th>Subtotal</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% pedido.detalles.forEach(function(detalle) { %>
+              <% var precio = Number(detalle.precio || 0); %>
+              <% var cantidad = Number(detalle.cantidad || 0); %>
+              <tr data-detalle-id="<%= detalle.id %>">
+                <td><%= detalle.producto_nombre || 'Sin nombre' %></td>
+                <td class="precio"><%= precio.toFixed(2) %></td>
+                <td>
+                  <% if (pedido.estado === 'pendiente') { %>
+                    <button class="menosBtn" data-pedido="<%= pedido.id %>" data-detalle="<%= detalle.id %>">-</button>
+                    <span class="cantidadDisplay"><%= cantidad %></span>
+                    <button class="masBtn" data-pedido="<%= pedido.id %>" data-detalle="<%= detalle.id %>">+</button>
+                  <% } else { %>
+                    <span class="cantidadDisplay"><%= cantidad %></span>
+                  <% } %>
+                </td>
+                <td class="subtotal"><%= (precio * cantidad).toFixed(2) %></td>
+                <td><%= pedido.fecha ? new Date(pedido.fecha).toLocaleString() : '---' %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+            <td colspan="3">Total</td>
+            <td class="totalPedido">
+              <%= pedido.detalles.reduce((acc, d) => acc + (Number(d.precio||0) * Number(d.cantidad||0)), 0).toFixed(2) %>
+            </td>
+            <td></td>
+          </tr>
+          </tfoot>
+        </table>
+
+        <% if (pedido.estado === 'pendiente') { %>
+          <form method="POST" action="/user/pedidos/confirmar">
+            <input type="hidden" name="pedidoId" value="<%= pedido.id %>">
+            <div style="text-align:center;">
+              <button type="submit">Confirmar pedido</button>
+            </div>
+          </form>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/pedidos.js"></script>
+
+<div style="text-align:center; margin-top: 20px;">
+  <a href="/user/productos">Volver a productos</a>
+  <br>
+  <a href="/user/dashboard">Volver al dashboard</a>
+</div>
+</body>
+</html>

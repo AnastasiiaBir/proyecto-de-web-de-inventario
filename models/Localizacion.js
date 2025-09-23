@@ -4,7 +4,7 @@ const db = require('../config/db');
 class Localizacion {
   static async getAllWithDetails() {
     const sql = `
-      SELECT id, nombre, direccion
+      SELECT id, nombre, direccion, ciudad
       FROM localizaciones
     `;
     const [rows] = await db.query(sql);
@@ -19,22 +19,35 @@ class Localizacion {
       localizacion.direccion,
       localizacion.ciudad
     ];
-    const [result] = await db.query(sql, [localizacion.nombre, localizacion.direccion]);
+    const [result] = await db.query(sql, [localizacion.nombre, localizacion.direccion, localizacion.ciudad]);
     console.log(`Localización agregada con ID ${result.insertId}`);
     return result.insertId;
   }
 
   static async update(id, localizacion) {
-    const sql = 'UPDATE localizaciones SET nombre=?, direccion=? WHERE id=?';
-    const params = [
-      localizacion.nombre,
-      localizacion.direccion,
-      localizacion.ciudad,
-      id
-    ];
-    await db.query(sql, params);
-    console.log(`Localización con ID ${id} actualizada`);
+  const fields = [];
+  const params = [];
+
+  if(localizacion.nombre !== undefined) {
+    fields.push('nombre=?');
+    params.push(localizacion.nombre);
   }
+  if(localizacion.direccion !== undefined) {
+    fields.push('direccion=?');
+    params.push(localizacion.direccion);
+  }
+  if(localizacion.ciudad !== undefined) {
+    fields.push('ciudad=?');
+    params.push(localizacion.ciudad);
+  }
+
+  if(fields.length === 0) return; // ничего не обновлять
+
+  const sql = `UPDATE localizaciones SET ${fields.join(', ')} WHERE id=?`;
+  params.push(id);
+  await db.query(sql, params);
+  console.log(`Localización con ID ${id} actualizada`);
+}
 
   static async delete(id) {
     const sql = 'DELETE FROM localizaciones WHERE id=?';

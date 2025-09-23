@@ -1,53 +1,40 @@
 // public/js/perfil.js
-
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Scripts de perfil cargados');
+  const profileForm = document.getElementById('profileForm');
+  const fotoInput = document.querySelector('input[name="foto"]');
+  const fotoPreview = document.getElementById('fotoPreview');
 
-  const form = document.getElementById('perfilForm');
-  const saveBtn = document.getElementById('btnGuardarPerfil');
+  profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  if (form) {
-    const editableFields = form.querySelectorAll('.editable');
+    const formData = new FormData();
+    formData.append('nombre', document.getElementById('nombre').value);
+    formData.append('apellidos', document.getElementById('apellidos').value);
+    formData.append('telefono', document.getElementById('telefono').value);
+    formData.append('email', document.getElementById('email').value);
+    const password = document.getElementById('password').value;
+    if (password) formData.append('password', password);
+    if (fotoInput.files[0]) formData.append('foto', fotoInput.files[0]);
 
-    // Клик по ячейке для редактирования
-    editableFields.forEach(cell => {
-      cell.addEventListener('click', () => {
-        if(!cell.querySelector('input')) {
-          const val = cell.textContent;
-          cell.innerHTML = `<input type="text" value="${val}" style="width:100%;">`;
-          if(saveBtn) saveBtn.style.display = 'inline-block';
+    try {
+      const res = await fetch('/admin/perfil/editar', {
+        method: 'POST',
+        body: formData
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        alert('Perfil actualizado correctamente');
+        document.getElementById('password').value = '';
+        if (result.fotoPath && fotoPreview.tagName === 'IMG') {
+          fotoPreview.src = result.fotoPath + '?t=' + new Date().getTime();
         }
-      });
-    });
-
-    // Сохранение профиля
-    if(saveBtn) {
-      saveBtn.addEventListener('click', () => {
-        const data = {};
-        editableFields.forEach(cell => {
-          const input = cell.querySelector('input');
-          if(input) data[cell.dataset.field] = input.value;
-        });
-
-        fetch('/perfil/editar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        })
-        .then(res => res.json())
-        .then(res => {
-          if(res.success) {
-            editableFields.forEach(cell => {
-              const input = cell.querySelector('input');
-              if(input) cell.textContent = input.value;
-            });
-            saveBtn.style.display = 'none';
-            console.log('Perfil actualizado');
-          } else {
-            alert('Error al guardar perfil');
-          }
-        });
-      });
+      } else {
+        alert(result.message || 'Error al actualizar perfil');
+      }
+    } catch (err) {
+      console.error('Error al actualizar perfil:', err);
+      alert('Error al actualizar perfil');
     }
-  }
+  });
 });

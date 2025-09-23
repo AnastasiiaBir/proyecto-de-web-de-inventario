@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalles Pedido <%= pedido.id %></title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Detalles del Pedido Nº <%= pedido.id %></h1>
+  <p><strong>Fecha:</strong> <%= pedido.fecha.toISOString().slice(0,10) %></p>
+  <p><strong>Usuario:</strong> <%= pedido.usuario_nombre %> (<%= pedido.usuario_email %>)</p>
+  <p><strong>Estado:</strong> <%= pedido.estado %></p>
+  <p><strong>Total:</strong> €<%= pedido.total %></p>
+
+  <h2>Productos</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Cantidad</th>
+        <th>Precio</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% pedido.detalles.forEach(det => { %>
+        <tr>
+          <td><%= det.producto_nombre %></td>
+          <td><%= det.cantidad %></td>
+          <td>€<%= det.precio %></td>
+          <td>€<%= det.subtotal %></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <div style="margin-top:20px;">
+    <a href="/admin/pedidos">← Volver a pedidos</a>
+  </div>
+</body>
+</html>

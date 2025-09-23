@@ -2,6 +2,7 @@
 const Usuario = require('../models/Usuario');
 const puppeteer = require('puppeteer');
 const ExcelJS = require('exceljs');
+const bcrypt = require('bcrypt');
 
 // Listado de usuarios
 exports.listUsuarios = async (req, res) => {
@@ -23,7 +24,11 @@ exports.getNuevoUsuario = (req, res) => {
 exports.postNuevoUsuario = async (req, res) => {
   try {
     const { nombre, apellidos, email, telefono, rol_id, password } = req.body;
-    await Usuario.add({ nombre, apellidos, email, telefono, rol_id, password });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await Usuario.add({ nombre, apellidos, email, telefono, rol_id, password: hashedPassword });
+    
     console.log(`Nuevo usuario agregado: ${email}`);
     res.redirect('/admin/usuarios');
   } catch (err) {
@@ -37,12 +42,45 @@ exports.updateUsuario = async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
+
+    // Если поле фото не пришло — удаляем его из объекта,
+    // чтобы update() его даже не касался
+    if (!('foto' in data)) {
+      // ничего не делаем с фото
+    } else if (!data.foto || data.foto.trim() === '') {
+      // если пришло пустое — тоже убираем
+      delete data.foto;
+    }
+
     await Usuario.update(id, data);
     console.log(`Usuario actualizado vía AJAX: ID ${id}`);
     res.json({ success: true });
   } catch (err) {
     console.error('Error al actualizar usuario:', err);
     res.json({ success: false });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  console.log('🔔 resetPassword llamado'); // логируем вызов
+  console.log('Params:', req.params);     // смотрим id
+  try {
+    const { id } = req.params;
+    if (!id) {
+      console.log('❌ No se recibió ID');
+      return res.status(400).json({ success: false, message: 'No se recibió ID' });
+    }
+
+    const newPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await Usuario.updatePassword(id, hashedPassword );
+
+    console.log(`Password reset para usuario ID ${id}`);
+    res.json({ success: true, newPassword });
+  } catch (err) {
+    console.error('Error al resetear contraseña:', err);
+    res.status(500).json({ success: false, message: 'Error interno' });
   }
 };
 

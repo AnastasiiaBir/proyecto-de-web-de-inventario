@@ -7,6 +7,12 @@ const MySQLStore = require('express-mysql-session')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const http = require('http');
+
+const app = express(); // твой основной express-файл
+const server = http.createServer(app);
+const { Server } = require('socket.io');
+const io = new Server(server);
 
 // --- Rutas ---
 const authRoutes = require('./routes/auth');
@@ -17,8 +23,6 @@ const productosRoutes = require('./routes/productos');
 const usuariosRoutes = require('./routes/usuarios');
 const proveedoresRoutes = require('./routes/proveedores');
 const localizacionesRoutes = require('./routes/localizaciones');
-
-const app = express();
 
 // --- Configuración de la sesión ---
 const sessionStore = new MySQLStore({
@@ -64,6 +68,12 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// Раздаём публичные файлы
+// app.use(express.static('public')); // уже есть?
+// Раздаём папку uploads
+// app.use('/uploads', express.static('public/uploads'));
 
 // --- Client-side logging ---
 app.post('/_log', (req, res) => {
@@ -77,8 +87,9 @@ app.use('/', authRoutes);
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/categorias', categoriasRoutes);
-app.use('/productos', productosRoutes);
-app.use('/usuarios', usuariosRoutes);
+// app.use('/productos', productosRoutes);
+app.use('/admin/productos', productosRoutes);
+app.use('/admin/usuarios', usuariosRoutes);
 app.use('/proveedores', proveedoresRoutes);
 app.use('/localizaciones', localizacionesRoutes);
 
@@ -88,8 +99,14 @@ app.use((req, res) => {
   res.status(404).render('404', { url: req.originalUrl });
 });
 
+app.locals.io = io;
+io.on('connection', (socket) => {
+  console.log('🔌 Cliente conectado');
+});
+
+
 // --- Servidor ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

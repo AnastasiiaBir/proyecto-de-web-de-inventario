@@ -9,6 +9,22 @@
 <body>
   <h1 style="text-align:center;">Mi Perfil</h1>
 
+  <!-- Foto de perfil -->
+  <div style="text-align:center; margin-bottom:20px;">
+    <% if (user.foto) { %>
+      <img src="<%= user.foto %>" 
+           alt="Foto de perfil" 
+           style="width:150px; height:150px; border-radius:50%; object-fit:cover;">
+    <% } else { %>
+      <div style="width:150px; height:150px; border-radius:50%; background:#ddd; display:inline-block;"></div>
+    <% } %>
+    
+    <form action="/user/upload-photo" method="POST" enctype="multipart/form-data" style="margin-top:10px;">
+      <input type="file" name="foto" accept="image/*">
+      <button type="submit">Subir Foto</button>
+    </form>
+  </div>
+
   <table>
     <tbody>
       <tr>
@@ -26,6 +42,28 @@
     </tbody>
   </table>
 
-  <a href="/user/dashboard">Volver al dashboard</a>
+  <!-- Cambiar contraseña -->
+  <div style="margin-top:30px;">
+    <h2>Cambiar Contraseña</h2>
+    <form action="/user/change-password" method="POST">
+      <div>
+        <label>Contraseña actual:</label>
+        <input type="password" name="currentPassword" required>
+      </div>
+      <div>
+        <label>Nueva contraseña:</label>
+        <input type="password" name="newPassword" required>
+      </div>
+      <div>
+        <label>Confirmar nueva contraseña:</label>
+        <input type="password" name="confirmPassword" required>
+      </div>
+      <button type="submit">Cambiar Contraseña</button>
+    </form>
+  </div>
+
+  <div style="margin-top:20px;">
+    <a href="/user/dashboard">Volver al dashboard</a>
+  </div>
 </body>
 </html>
