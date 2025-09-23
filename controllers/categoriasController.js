@@ -59,6 +59,12 @@ exports.deleteCategoria = async (req, res) => {
   }
 };
 
+// Retornar JSON para selects
+exports.getAllAsJson = async () => {
+  const categorias = await Categoria.getAllWithDetails();
+  return categorias.map(c => ({ id: c.id, nombre: c.nombre }));
+};
+
 // Exportar categorías a PDF
 exports.exportPDF = async (req, res) => {
   try {

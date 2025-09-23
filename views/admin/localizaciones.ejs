@@ -36,7 +36,13 @@
     <a href="/admin/localizaciones/nuevo"><button>Añadir Localización</button></a>
   </div>
 
-  <input type="text" id="search" placeholder="Buscar localización..." onkeyup="filterTable()">
+  <!-- Фильтры по колонкам -->
+  <div class="filters">
+    <input id="filterNombre" class="filter-input" placeholder="Nombre">
+    <input id="filterDireccion" class="filter-input" placeholder="Dirección">
+    <input id="filterCiudad" class="filter-input" placeholder="Ciudad">
+    <button id="btnFiltrarLocalizaciones">Filtrar</button>
+  </div>
 
   <table id="tablaLocalizaciones" border="1">
     <thead>
@@ -52,9 +58,9 @@
       <% localizaciones.forEach(l => { %>
       <tr data-id="<%= l.id %>">
         <td><%= l.id %></td>
-        <td class="editable"><%= l.nombre %></td>
-        <td class="editable"><%= l.direccion %></td>
-        <td class="editable"><%= l.ciudad %></td>
+        <td class="editable" data-field="nombre"><%= l.nombre %></td>
+        <td class="editable" data-field="direccion"><%= l.direccion %></td>
+        <td class="editable" data-field="ciudad"><%= l.ciudad %></td>
         <td>
           <button class="save-btn" style="display:none;">Guardar</button>
           <button class="delete-btn">Eliminar</button>

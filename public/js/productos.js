@@ -1,122 +1,227 @@
 // public/js/productos.js
 
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('Scripts de productos cargados');
-  // === Dropdown Export ===
-  const exportButton = document.getElementById('btnExportar');
-  const exportMenu = document.getElementById('exportMenu');
+document.addEventListener('DOMContentLoaded', async () => {
+  const table = document.getElementById('tablaProductos');
+  const filterForm = document.querySelector('.filters');
 
-  if (exportButton && exportMenu) {
-    console.log('Export elements not found');
-    exportButton.addEventListener('click', (e) => {
-      e.stopPropagation();
-      exportMenu.style.display = exportMenu.style.display === 'block' ? 'none' : 'block';
+  let categorias = window.categorias || [];
+  let proveedores = window.proveedores || [];
+  let localizaciones = window.localizaciones || [];
+
+  if (!categorias.length || !proveedores.length || !localizaciones.length) {
+    try {
+      const res = await fetch('/admin/productos/options');
+      const data = await res.json();
+      categorias = data.categorias;
+      proveedores = data.proveedores;
+      localizaciones = data.localizaciones;
+    } catch (err) {
+      console.error('Error al obtener opciones:', err);
+    }
+  }
+
+  function createSelect(options, currentText) {
+    const select = document.createElement('select');
+    options.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.id;
+      option.textContent = opt.nombre;
+      if (opt.nombre === currentText) option.selected = true;
+      select.appendChild(option);
     });
+    return select;
+  }
 
-  //console.log('Export elements OK');
+  if (!table || !filterForm) return;
+
+  // === Dropdown Export ===
+const exportButton = document.getElementById('btnExportar');
+const exportMenu = document.getElementById('exportMenu');
+
+if (exportButton && exportMenu) {
+  exportButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    exportMenu.style.display = exportMenu.style.display === 'block' ? 'none' : 'block';
+  });
+
   document.addEventListener('click', (e) => {
     if (exportMenu.style.display === 'block' &&
         !exportButton.contains(e.target) &&
         !exportMenu.contains(e.target)) {
       exportMenu.style.display = 'none';
-      console.log('Menú export cerrado por clic fuera');
     }
   });
 }
 
-    // === Filtrar productos ===
-  const btnFiltrar = document.getElementById('btnFiltrar');
-  const table = document.getElementById('tablaProductos');
-  if (btnFiltrar && table) {
-    btnFiltrar.addEventListener('click', () => {
-      const nombre = (document.getElementById('filterNombre').value || '').toLowerCase();
-      const marca = (document.getElementById('filterMarca').value || '').toLowerCase();
-      const categoria = (document.getElementById('filterCategoria').value || '').toLowerCase();
-      const proveedor = (document.getElementById('filterProveedor').value || '').toLowerCase();
-      const precioMax = parseFloat(document.getElementById('filterPrecio').value) || Infinity;
-      const costoMax = parseFloat(document.getElementById('filterCosto').value) || Infinity;
-      const stockMin = parseFloat(document.getElementById('filterStock').value) || 0;
+  // === Filtros ===
+  filterForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nombre = (filterForm.nombre.value || '').toLowerCase();
+    const marca = (filterForm.marca.value || '').toLowerCase();
+    const categoria = (filterForm.categoria.value || '').toLowerCase();
+    const proveedor = (filterForm.proveedor.value || '').toLowerCase();
+    const localizacion = (filterForm.localizacion.value || '').toLowerCase();
+    const precioMax = parseFloat(filterForm.precioMax.value) || Infinity;
+    const costoMax = parseFloat(filterForm.costoMax.value) || Infinity;
+    const stockMin = parseFloat(filterForm.stockMin.value) || 0;
 
-      let shown = 0;
-      table.querySelectorAll('tbody tr').forEach(row => {
-        const cells = row.children;
-        const precio = parseFloat(cells[5].innerText) || 0;
-        const costo = parseFloat(cells[6].innerText) || 0;
-        const stock = parseFloat(cells[7].innerText) || 0;
-        const match =
-          cells[1].innerText.toLowerCase().includes(nombre) &&
-          cells[2].innerText.toLowerCase().includes(marca) &&
-          cells[3].innerText.toLowerCase().includes(categoria) &&
-          cells[4].innerText.toLowerCase().includes(proveedor) &&
-          precio <= precioMax &&
-          costo <= costoMax &&
-          stock >= stockMin;
-        row.style.display = match ? '' : 'none';
-        if(match) shown++;
-      });
-      console.log(`Filtro aplicado. Filas visibles: ${shown}`);
-    });
-  }
-
-// === Editar / Eliminar productos ===
-  if (table) {
     table.querySelectorAll('tbody tr').forEach(row => {
-      const cells = row.querySelectorAll('.editable');
-      const saveBtn = row.querySelector('.save-btn');
-      const deleteBtn = row.querySelector('.delete-btn');
-      const productId = row.dataset.id;
+      const cells = row.children;
+      const rowCategoria = cells[3].textContent.toLowerCase();
+      const rowProveedor = cells[4].textContent.toLowerCase();
+      const rowLocalizacion = cells[10].textContent.toLowerCase();
+      const rowPrecio = parseFloat(cells[5].textContent) || 0;
+      const rowCosto = parseFloat(cells[6].textContent) || 0;
+      const rowStock = parseFloat(cells[8].textContent) || 0;
 
-      cells.forEach(cell => {
-        cell.addEventListener('click', () => {
-          if(!cell.querySelector('input')){
-            const val = cell.textContent;
-            cell.innerHTML = `<input type="text" value="${val}" style="width:100%;">`;
-            if(saveBtn) saveBtn.style.display = 'inline-block';
-          }
-        });
+      const match =
+        cells[1].textContent.toLowerCase().includes(nombre) &&
+        cells[2].textContent.toLowerCase().includes(marca) &&
+        rowCategoria.includes(categoria) &&
+        rowProveedor.includes(proveedor) &&
+        rowLocalizacion.includes(localizacion) &&
+        rowPrecio <= precioMax &&
+        rowCosto <= costoMax &&
+        rowStock >= stockMin;
+
+      row.style.display = match ? '' : 'none';
+    });
+  });
+
+  // === Edit / Save / Cancel / Delete ===
+  // let editingCell = null;
+  // let editingInput = null;
+  // let currentRowSaveBtn = null;
+  // let currentRowCancelBtn = null;
+
+  table.querySelectorAll('tbody tr').forEach(row => {
+    const cells = row.querySelectorAll('.editable');
+    const deleteBtn = row.querySelector('.delete-btn');
+    
+    // Создаём кнопки для каждой строки
+    let saveBtn = row.querySelector('.save-btn');
+    if (!saveBtn) {
+      saveBtn = document.createElement('button');
+      saveBtn.textContent = 'Guardar';
+      saveBtn.className = 'save-btn';
+      saveBtn.style.display = 'none';
+      row.appendChild(saveBtn);
+    }
+
+    let cancelBtn = row.querySelector('.cancel-btn');
+    if (!cancelBtn) {
+      cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancelar';
+      cancelBtn.className = 'cancel-btn';
+      cancelBtn.style.display = 'none';
+      saveBtn.parentNode.insertBefore(cancelBtn, saveBtn.nextSibling);
+    }
+
+    let editingCell = null;
+    let editingInput = null;
+
+    // Сохраняем оригинальные значения
+    const productId = row.dataset.id;
+    const originalValues = {};
+    cells.forEach(cell => originalValues[cell.dataset.field] = cell.textContent.trim());
+
+    // === Double click ===
+    cells.forEach(cell => {
+      cell.addEventListener('dblclick', () => {
+        if (editingCell) return;
+        editingCell = cell;
+
+        // currentRowSaveBtn = saveBtn;
+        // currentRowCancelBtn = cancelBtn;
+
+        const field = cell.dataset.field;
+        const currentValue = cell.textContent.trim();
+        let input;
+
+        let optionsList = [];
+        if (field === 'categoria_nombre') optionsList = categorias;
+        else if (field === 'proveedor_nombre') optionsList = proveedores;
+        else if (field === 'localizacion_nombre') optionsList = localizaciones;
+
+        if (optionsList.length) {
+          input = createSelect(optionsList, currentValue);
+        } else {
+          input = document.createElement('input');
+          input.type = 'text';
+          input.value = currentValue;
+        }
+
+        cell.innerHTML = '';
+        cell.appendChild(input);
+        input.focus();
+        editingInput = input;
+
+        saveBtn.style.display = 'inline-block';
+        cancelBtn.style.display = 'inline-block';
       });
+    });
 
-      if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
-          const data = {};
-          cells.forEach(cell => {
-            const input = cell.querySelector('input');
-            if(input) data[cell.dataset.field] = input.value;
-          });
+    // === Save ===
+    saveBtn.addEventListener('click', async () => {
+      if (!editingCell || !editingInput) return;
 
-          fetch('/admin/productos/editar/' + productId, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-          })
-          .then(res => res.json())
-          .then(res => {
-            if(res.success){
-              cells.forEach(cell => {
-                const input = cell.querySelector('input');
-                if (input) cell.textContent = input.value;
-              });
-              saveBtn.style.display = 'none';
-              console.log(`Producto ID ${productId} actualizado`);
-            } else alert('Error al guardar');
-          });
+      const field = editingCell.dataset.field;
+      let value = editingInput.value || '';
+
+      let sendField = field;
+      if (field === 'categoria_nombre') sendField = 'categoria_id';
+      else if (field === 'proveedor_nombre') sendField = 'proveedor_id';
+      else if (field === 'localizacion_nombre') sendField = 'localizacion_id';
+
+      try {
+        const res = await fetch(`/admin/productos/${productId}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ [sendField]: value })
         });
-      }
+        const json = await res.json();
+        if (json.success) {
 
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-          if(confirm('¿Seguro que quieres eliminar este producto?')) {
-            fetch('/admin/productos/eliminar/' + productId, { method: 'DELETE' })
-              .then(res => res.json())
-              .then(res => {
-                if(res.success) {
-                  row.remove();
-                console.log(`Producto ID ${productId} eliminado`);
-                } else alert('Error al eliminar');
-              });
-          }
-        });
+          if (field === 'categoria_nombre') editingCell.textContent = categorias.find(c => c.id == value)?.nombre || '';
+          else if (field === 'proveedor_nombre') editingCell.textContent = proveedores.find(p => p.id == value)?.nombre || '';
+          else if (field === 'localizacion_nombre') editingCell.textContent = localizaciones.find(l => l.id == value)?.nombre || '';
+          else editingCell.textContent = value;
+
+          editingCell = null;
+          editingInput = null;
+          saveBtn.style.display = 'none';
+          cancelBtn.style.display = 'none';
+        } else {
+          alert('Error al guardar');
+        }
+      } catch (err) {
+        alert('Error al guardar');
       }
     });
-  }
+
+    // === Cancel ===
+    cancelBtn.addEventListener('click', () => {
+      if (!editingCell) return;
+      editingCell.textContent = originalValues[editingCell.dataset.field];
+      editingCell = null;
+      editingInput = null;
+      saveBtn.style.display = 'none';
+      cancelBtn.style.display = 'none';
+    });
+
+    // === Delete ===
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', async () => {
+        if (!confirm('¿Seguro que quieres eliminar este producto?')) return;
+        try {
+          const res = await fetch(`/admin/productos/eliminar/${row.dataset.id}`, { method: 'DELETE' });
+          const json = await res.json();
+          if (json.success) row.remove();
+          else alert('Error al eliminar');
+        } catch (err) {
+          alert('Error al eliminar');
+        }
+      });
+    }
+  });
 });

@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const localizacionId = row.dataset.id;
 
       cells.forEach(cell => {
-        cell.addEventListener('click', () => {
+        cell.addEventListener('dblclick', () => {
           if(!cell.querySelector('input')) {
             const val = cell.textContent;
             cell.innerHTML = `<input type="text" value="${val}" style="width:100%;">`;
@@ -73,8 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
           const data = {};
           cells.forEach(cell => {
             const input = cell.querySelector('input');
-            if(input) data[cell.dataset.field] = input.value;
+            if(input) { // только изменённые
+              data[cell.dataset.field] = input.value;
+            }
           });
+
+          if(Object.keys(data).length === 0) return; // ничего не меняли
 
           fetch('/admin/localizaciones/editar/' + localizacionId, {
             method: 'POST',
@@ -94,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
       }
-
+      
       // Удаление
       if(deleteBtn) {
         deleteBtn.addEventListener('click', () => {

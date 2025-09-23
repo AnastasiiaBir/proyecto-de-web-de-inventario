@@ -1,3 +1,4 @@
+<!-- views/admin/perfil.ejs -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,48 +11,55 @@
     .profile-field label { display: block; font-weight: bold; margin-bottom: 3px; }
     .profile-field input { width: 100%; padding: 5px; }
     .btn { padding: 8px 15px; margin-top: 10px; cursor: pointer; }
+    .profile-photo { width:150px; height:150px; border-radius:50%; object-fit:cover; display:block; margin:0 auto; background:#ddd; }
   </style>
 </head>
 <body>
   <h1>Perfil Administrador</h1>
 
   <div class="profile-container">
-    <div class="profile-field">
-      <label>Nombre:</label>
-      <input type="text" id="nombre" value="<%= user.nombre %>">
-    </div>
-    <div class="profile-field">
-      <label>Email:</label>
-      <input type="text" id="email" value="<%= user.email %>">
-    </div>
-    <div class="profile-field">
-      <label>Contraseña:</label>
-      <input type="password" id="password" placeholder="Nueva contraseña">
-    </div>
-    <button class="btn" id="saveProfile">Guardar Cambios</button>
-  </div>
+    <form id="profileForm" enctype="multipart/form-data">
+
+      <!-- FOTO DE PERFIL -->
+      <div style="text-align:center; margin-bottom:20px;">
+        <% if (user.foto) { %>
+          <img id="fotoPreview" class="profile-photo" src="<%= user.foto %>" alt="Foto de perfil">
+        <% } else { %>
+          <div id="fotoPreview" class="profile-photo"></div>
+        <% } %>
+        <div style="margin-top:10px;">
+          <input type="file" name="foto" accept="image/*">
+        </div>
+      </div>
+
+      <!-- CAMPOS DE PERFIL -->
+      <div class="profile-field">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" value="<%= user.nombre %>" required>
+      </div>
+      <div class="profile-field">
+        <label for="apellidos">Apellidos:</label>
+        <input type="text" id="apellidos" name="apellidos" value="<%= user.apellidos || '' %>">
+      </div>
+      <div class="profile-field">
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono" value="<%= user.telefono || '' %>">
+      </div>
+      <div class="profile-field">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" value="<%= user.email %>" required>
+      </div>
+      <div class="profile-field">
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" name="password" placeholder="Nueva contraseña">
+      </div>
+      <button type="submit" class="btn">Guardar Cambios</button>
+    </form>
+  </div>    
 
   <br>
   <a href="/admin/dashboard">Volver al panel</a>
 
-<script>
-document.getElementById('saveProfile').addEventListener('click', () => {
-  const data = {
-    nombre: document.getElementById('nombre').value,
-    email: document.getElementById('email').value,
-    password: document.getElementById('password').value
-  };
-
-  fetch('/admin/perfil/editar', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(data)
-  }).then(res=>res.json())
-    .then(res=>{
-      if(res.success) alert('Perfil actualizado correctamente');
-      else alert('Error al actualizar perfil');
-    });
-});
-</script>
+  <script src="/js/perfil.js"></script>
 </body>
 </html>

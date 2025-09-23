@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Клик по ячейке для редактирования
       cells.forEach(cell => {
-        cell.addEventListener('click', () => {
+        cell.addEventListener('dblclick', () => {
           if(!cell.querySelector('input')) {
             const val = cell.textContent;
             cell.innerHTML = `<input type="text" value="${val}" style="width:100%;">`;

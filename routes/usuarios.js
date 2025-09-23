@@ -18,6 +18,8 @@ router.post('/nuevo', isAuthenticated, isAdmin, usuariosController.postNuevoUsua
 // Editar usuario (in-line AJAX)
 router.post('/editar/:id', isAuthenticated, isAdmin, usuariosController.updateUsuario);
 
+router.post('/reset-password/:id', isAuthenticated, isAdmin, usuariosController.resetPassword);
+
 // Eliminar usuario (in-line AJAX)
 router.delete('/eliminar/:id', isAuthenticated, isAdmin, usuariosController.deleteUsuario);
 

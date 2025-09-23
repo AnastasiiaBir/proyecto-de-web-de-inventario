@@ -31,7 +31,9 @@ exports.postLogin = async (req, res) => {
       nombre: usuario.nombre,
       apellidos: usuario.apellidos,
       email: usuario.email,
-      rol_id: usuario.rol_id
+      rol_id: usuario.rol_id,
+      telefono: usuario.telefono || null,
+      foto: usuario.foto || null
     };
 
     // 🔑 Редирект на профиль в зависимости от роли

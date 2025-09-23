@@ -36,13 +36,20 @@
     <a href="/admin/proveedores/nuevo"><button>Añadir Proveedor</button></a>
   </div>
 
-  <input type="text" id="search" placeholder="Buscar proveedor..." onkeyup="filterTable()">
+  <div class="filters">
+    <input id="filterNombre" class="filter-input" placeholder="Nombre">
+    <input id="filterCiudad" class="filter-input" placeholder="Contacto">
+    <input id="filterTelefono" class="filter-input" placeholder="Teléfono">
+    <input id="filterEmail" class="filter-input" placeholder="Email">
+    <button id="btnFiltrarProveedores">Filtrar</button>
+  </div>
 
   <table id="tablaProveedores" border="1">
     <thead>
       <tr>
         <th>ID</th>
         <th>Nombre</th>
+        <th>Contacto</th>
         <th>Teléfono</th>
         <th>Email</th>
         <th>Acciones</th>
@@ -52,9 +59,10 @@
       <% proveedores.forEach(p => { %>
       <tr data-id="<%= p.id %>">
         <td><%= p.id %></td>
-        <td class="editable"><%= p.nombre %></td>
-        <td class="editable"><%= p.telefono %></td>
-        <td class="editable"><%= p.email %></td>
+        <td class="editable" data-field="nombre"><%= p.nombre %></td>
+        <td class="editable" data-field="contacto"><%= p.contacto %></td>
+        <td class="editable" data-field="telefono"><%= p.telefono %></td>
+        <td class="editable" data-field="email"><%= p.email %></td>
         <td>
           <button class="save-btn" style="display:none;">Guardar</button>
           <button class="delete-btn">Eliminar</button>

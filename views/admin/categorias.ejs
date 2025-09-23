@@ -36,7 +36,10 @@
     <a href="/admin/categorias/nuevo"><button>Añadir Categoría</button></a>
   </div>
 
-  <input type="text" id="search" placeholder="Buscar categoría..." onkeyup="filterTable()">
+  <div class="filters">
+    <input id="filterNombre" class="filter-input" placeholder="Nombre">
+    <button id="btnFiltrarCategorias">Filtrar</button>
+  </div>
 
   <table id="tablaCategorias" border="1">
     <thead>
@@ -50,7 +53,7 @@
       <% categorias.forEach(c => { %>
         <tr data-id="<%= c.id %>">
           <td><%= c.id %></td>
-          <td class="editable"><%= c.nombre %></td>
+          <td class="editable" data-field="nombre"><%= c.nombre %></td>
           <td>
             <button class="save-btn" style="display:none;">Guardar</button>
             <button class="delete-btn">Eliminar</button>
