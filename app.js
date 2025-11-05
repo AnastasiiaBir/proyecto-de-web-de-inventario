@@ -7,13 +7,24 @@ const MySQLStore = require('express-mysql-session')(session);
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 const http = require('http');
 const Sentry = require('@sentry/node');
+const mysql = require('mysql2');
 
-const app = express(); // твой основной express-файл
+const app = express();
 const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server);
+
+// --- Логи переменных окружения ---
+console.log('=== ENV INFO ===');
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_PORT:', process.env.DB_PORT);
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_NAME:', process.env.DB_NAME);
+console.log('PORT:', process.env.PORT);
+console.log('================');
 
 // --- Inicialización de Sentry ---
 Sentry.init({
@@ -23,6 +34,25 @@ Sentry.init({
 
 // --- Middleware Sentry для обработки запросов (до маршрутов) ---
 app.use(Sentry.Handlers ? Sentry.Handlers.requestHandler() : (req, res, next) => next());
+
+// --- Подключение к БД для теста ---
+const testPool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  ssl: { mode: 'REQUIRED' } // Render/Aiven
+}).promise();
+
+testPool.getConnection()
+  .then(conn => {
+    console.log('✅ DB Connected Successfully! Connection ID:', conn.threadId);
+    conn.release();
+  })
+  .catch(err => {
+    console.error('❌ DB Connection Error:', err.stack || err);
+  });
 
 // --- Configuración de la sesión ---
 const sessionStore = new MySQLStore({
@@ -79,6 +109,7 @@ app.get('/seo/sitemap.xml', (req, res) => {
     res.header('Content-Type', 'application/xml');
     res.sendFile(sitemapPath);
   } else {
+    console.warn('Sitemap not found');
     res.status(404).send('Sitemap not found');
   }
 });

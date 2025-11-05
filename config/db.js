@@ -8,7 +8,7 @@ console.log('Host:', process.env.DB_HOST);
 console.log('Port:', process.env.DB_PORT);
 console.log('User:', process.env.DB_USER);
 console.log('Database:', process.env.DB_NAME);
-console.log('SSL:', process.env.DB_SSL);
+console.log('SSL Mode:', process.env.DB_SSL);
 console.log('==========================');
 
 const pool = mysql.createPool({
@@ -21,9 +21,10 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   ssl: {
-    mode: process.env.DB_SSL ? process.env.DB_SSL.replace('ssl-mode=', '') : 'REQUIRED',
+    mode: process.env.DB_SSL || 'REQUIRED',
     rejectUnauthorized: false
-  }
+  },
+  connectTimeout: 15000
 });
 
 // Логируем успешное подключение
