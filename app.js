@@ -48,14 +48,21 @@ const testPool = mysql.createPool({
   } // Render/Aiven
 }).promise();
 
-testPool.getConnection()
-  .then(conn => {
+(async () => {
+  try {
+    const conn = await testPool.getConnection();
     console.log('✅ DB Connected Successfully! Connection ID:', conn.threadId);
     conn.release();
-  })
-  .catch(err => {
+  } catch (err) {
     console.error('❌ DB Connection Error:', err.stack || err);
-  });
+  }
+})();
+
+// --- Middleware логирования всех запросов ---
+app.use((req, res, next) => {
+  console.log(`📡 ${req.method} ${req.url} - ${req.ip}`);
+  next();
+});
 
 // --- Configuración de la sesión ---
 const sessionStore = new MySQLStore({
@@ -64,7 +71,7 @@ const sessionStore = new MySQLStore({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   ssl: {
-    mode: 'REQUIRED',           // обязательный SSL
+    mode: 'REQUIRED',           // SSL
     rejectUnauthorized: false   // игнор self-signed сертификатов
   } // для Aiven/Render
 });
@@ -124,7 +131,7 @@ app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
   res.send(`User-agent: *
 Allow: /
-Sitemap: http://localhost:3000/seo/sitemap.xml`);
+Sitemap: http://localhost:${process.env.PORT || 3000}/seo/sitemap.xml`);
 });
 
 // --- Client-side logging ---
@@ -132,6 +139,19 @@ app.post('/_log', (req, res) => {
   const { where, msg } = req.body || {};
   console.log(`[CLIENT LOG] ${where || 'unknown'}: ${msg}`);
   res.sendStatus(204);
+});
+
+// --- Test DB Route ---
+app.get('/test-db', async (req, res) => {
+  try {
+    const conn = await testPool.getConnection();
+    const [rows] = await conn.query('SELECT 1 + 1 AS result');
+    conn.release();
+    res.send({ success: true, result: rows[0].result });
+  } catch (err) {
+    console.error('❌ /test-db ERROR:', err.stack || err);
+    res.status(500).send({ success: false, error: err.message });
+  }
 });
 
 // --- Rutas ---
@@ -144,17 +164,11 @@ const usuariosRoutes = require('./routes/usuarios');
 const proveedoresRoutes = require('./routes/proveedores');
 const localizacionesRoutes = require('./routes/localizaciones');
 
-// Раздаём публичные файлы
-// app.use(express.static('public')); // уже есть?
-// Раздаём папку uploads
-// app.use('/uploads', express.static('public/uploads'));
-
 // --- Rutas ---
 app.use('/', authRoutes);
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/categorias', categoriasRoutes);
-// app.use('/productos', productosRoutes);
 app.use('/admin/productos', productosRoutes);
 app.use('/admin/usuarios', usuariosRoutes);
 app.use('/proveedores', proveedoresRoutes);
