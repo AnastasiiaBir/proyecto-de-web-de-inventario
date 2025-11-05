@@ -42,7 +42,10 @@ const testPool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  ssl: { mode: 'REQUIRED' } // Render/Aiven
+  ssl: {
+    mode: 'REQUIRED',           // обязательный SSL
+    rejectUnauthorized: false   // игнор self-signed сертификатов
+  } // Render/Aiven
 }).promise();
 
 testPool.getConnection()
@@ -60,7 +63,10 @@ const sessionStore = new MySQLStore({
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  ssl: { mode: 'REQUIRED' } // для Aiven/Render
+  ssl: {
+    mode: 'REQUIRED',           // обязательный SSL
+    rejectUnauthorized: false   // игнор self-signed сертификатов
+  } // для Aiven/Render
 });
 
 app.use(session({
