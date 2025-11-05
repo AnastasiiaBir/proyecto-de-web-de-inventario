@@ -10,12 +10,15 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const Sentry = require('@sentry/node');
-const mysql = require('mysql2');
+// const mysql = require('mysql2');
 
 const app = express();
 const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server);
+
+// --- Подключаем пул из db.js ---
+const db = require('./config/db');
 
 // --- Логи переменных окружения ---
 console.log('=== ENV INFO ===');
@@ -35,54 +38,19 @@ Sentry.init({
 // --- Middleware Sentry для обработки запросов (до маршрутов) ---
 app.use(Sentry.Handlers ? Sentry.Handlers.requestHandler() : (req, res, next) => next());
 
-// --- Подключение к БД для теста ---
-const testPool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  ssl: {
-    mode: 'REQUIRED',           // SSL
-    rejectUnauthorized: false   // игнор self-signed сертификатов
-  }, // Render/Aiven
-  connectTimeout: 20000,
-}).promise();
-
-(async () => {
-  try {
-    const conn = await testPool.getConnection();
-    console.log('✅ DB Connected Successfully! Connection ID:', conn.threadId);
-    conn.release();
-  } catch (err) {
-    console.error('❌ DB Connection Error:', err.stack || err);
-  }
-})();
-
 // --- Middleware логирования всех запросов ---
 app.use((req, res, next) => {
   console.log(`📡 ${req.method} ${req.url} - ${req.ip}`);
   next();
 });
 
-// Логируем все ошибки перед стандартным error handler
-app.use((err, req, res, next) => {
-  console.error('❌ ERROR IN ROUTE:', req.method, req.originalUrl, err.stack || err);
-  if (!res.headersSent) {
-    res.status(500).send('Algo salió mal!');
-  }
-});
-
-// --- Configuración de la sesión ---
+// --- Конфигурация сессий ---
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  ssl: {
-    mode: 'REQUIRED',           // SSL
-    rejectUnauthorized: false   // игнор self-signed сертификатов
-  } // для Aiven/Render
+  ssl: { mode: process.env.DB_SSL || 'REQUIRED', rejectUnauthorized: false }
 });
 
 app.use(session({
@@ -107,11 +75,7 @@ app.use(helmet({
   }
 }));
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100
-});
-app.use(limiter);
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 
 // --- Configuración de EJS ---
 app.set('view engine', 'ejs');
@@ -150,19 +114,6 @@ app.post('/_log', (req, res) => {
   res.sendStatus(204);
 });
 
-// --- Test DB Route ---
-app.get('/test-db', async (req, res) => {
-  try {
-    const conn = await testPool.getConnection();
-    const [rows] = await conn.query('SELECT 1 + 1 AS result');
-    conn.release();
-    res.send({ success: true, result: rows[0].result });
-  } catch (err) {
-    console.error('❌ /test-db ERROR:', err.stack || err);
-    res.status(500).send({ success: false, error: err.message });
-  }
-});
-
 // --- Rutas ---
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -184,7 +135,7 @@ app.use('/proveedores', proveedoresRoutes);
 app.use('/localizaciones', localizacionesRoutes);
 
 // Доверяем прокси, чтобы Express правильно считывал X-Forwarded-For
-app.set('trust proxy', 1);
+// app.set('trust proxy', 1);
 
 // --- Páginas legales ---
 app.get('/aviso-legal', (req, res) => {
