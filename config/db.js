@@ -20,7 +20,8 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   ssl: {
-    rejectUnauthorized: false // для self-signed сертификата Aiven/Render
+    mode: 'REQUIRED',
+    rejectUnauthorized: false // только для теста
   }
 });
 
