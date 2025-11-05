@@ -24,7 +24,7 @@ const pool = mysql.createPool({
     mode: process.env.DB_SSL || 'REQUIRED',
     rejectUnauthorized: false
   },
-  connectTimeout: 15000
+  connectTimeout: 20000
 });
 
 // Логируем успешное подключение

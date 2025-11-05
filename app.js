@@ -43,9 +43,10 @@ const testPool = mysql.createPool({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   ssl: {
-    mode: 'REQUIRED',           // обязательный SSL
+    mode: 'REQUIRED',           // SSL
     rejectUnauthorized: false   // игнор self-signed сертификатов
-  } // Render/Aiven
+  }, // Render/Aiven
+  connectTimeout: 20000,
 }).promise();
 
 (async () => {
