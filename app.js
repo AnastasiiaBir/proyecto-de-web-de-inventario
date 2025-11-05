@@ -8,21 +8,21 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const http = require('http');
+const Sentry = require('@sentry/node');
 
 const app = express(); // твой основной express-файл
 const server = http.createServer(app);
 const { Server } = require('socket.io');
 const io = new Server(server);
 
-// --- Rutas ---
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
-const adminRoutes = require('./routes/admin');
-const categoriasRoutes = require('./routes/categorias');
-const productosRoutes = require('./routes/productos');
-const usuariosRoutes = require('./routes/usuarios');
-const proveedoresRoutes = require('./routes/proveedores');
-const localizacionesRoutes = require('./routes/localizaciones');
+// --- Inicialización de Sentry ---
+Sentry.init({
+  dsn: process.env.SENTRY_DSN,
+  tracesSampleRate: 1.0,
+});
+
+// --- Middleware Sentry для обработки запросов (до маршрутов) ---
+app.use(Sentry.Handlers ? Sentry.Handlers.requestHandler() : (req, res, next) => next());
 
 // --- Configuración de la sesión ---
 const sessionStore = new MySQLStore({
@@ -70,17 +70,46 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// Раздаём публичные файлы
-// app.use(express.static('public')); // уже есть?
-// Раздаём папку uploads
-// app.use('/uploads', express.static('public/uploads'));
+// --- SEO: Sitemap y Robots.txt ---
+// создаём маршруты для отдачи sitemap и robots.txt
+app.get('/seo/sitemap.xml', (req, res) => {
+  const sitemapPath = path.join(__dirname, 'seo', 'sitemap.xml');
+  if (fs.existsSync(sitemapPath)) {
+    res.header('Content-Type', 'application/xml');
+    res.sendFile(sitemapPath);
+  } else {
+    res.status(404).send('Sitemap not found');
+  }
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain');
+  res.send(`User-agent: *
+Allow: /
+Sitemap: http://localhost:3000/seo/sitemap.xml`);
+});
 
 // --- Client-side logging ---
 app.post('/_log', (req, res) => {
   const { where, msg } = req.body || {};
   console.log(`[CLIENT LOG] ${where || 'unknown'}: ${msg}`);
-  res.sendStatus(204); // исправлено
+  res.sendStatus(204);
 });
+
+// --- Rutas ---
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const adminRoutes = require('./routes/admin');
+const categoriasRoutes = require('./routes/categorias');
+const productosRoutes = require('./routes/productos');
+const usuariosRoutes = require('./routes/usuarios');
+const proveedoresRoutes = require('./routes/proveedores');
+const localizacionesRoutes = require('./routes/localizaciones');
+
+// Раздаём публичные файлы
+// app.use(express.static('public')); // уже есть?
+// Раздаём папку uploads
+// app.use('/uploads', express.static('public/uploads'));
 
 // --- Rutas ---
 app.use('/', authRoutes);
@@ -93,10 +122,32 @@ app.use('/admin/usuarios', usuariosRoutes);
 app.use('/proveedores', proveedoresRoutes);
 app.use('/localizaciones', localizacionesRoutes);
 
+// --- Páginas legales ---
+app.get('/aviso-legal', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'aviso-legal.html'));
+});
+
+app.get('/privacidad', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'privacy-policy.html'));
+});
+
+app.get('/cookies', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'cookies-policy.html'));
+});
+
 // --- 404 обработка ---
 app.use((req, res) => {
   console.warn(`404 - Not Found: ${req.originalUrl}`);
   res.status(404).render('404', { url: req.originalUrl });
+});
+
+// --- Integración Sentry para errores ---
+app.use(Sentry.Handlers ? Sentry.Handlers.errorHandler() : (err, req, res, next) => next(err));
+
+// --- Обработка ошибок ---
+app.use((err, req, res, next) => {
+  console.error('❌ ERROR CAPTURED:', err.message);
+  res.status(500).send('Algo salió mal!');
 });
 
 app.locals.io = io;

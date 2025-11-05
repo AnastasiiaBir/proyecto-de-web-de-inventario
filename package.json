@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sentry/node": "^10.22.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
@@ -23,7 +24,11 @@
     "multer": "^2.0.2",
     "mysql2": "^3.14.3",
     "pdfkit": "^0.17.1",
-    "puppeteer": "^24.16.2",
+    "sitemap": "^8.0.2",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.27.0",
+    "unlighthouse": "^0.17.4"
   }
 }

@@ -1,0 +1,16 @@
+LOAD DATABASE
+     FROM mysql://root:1234@localhost/inventario
+     INTO postgresql://inventario:PLGCwi1OeuD0nSzzpsu9L0mcp3WXK6Xn@dpg-d3r6dker433s73e7amd0-a.frankfurt-postgres.render.com:5432/inventario_8ich?sslmode=require
+     
+WITH include no drop,
+     create tables,
+     create indexes,
+     reset sequences,
+     data only
+
+SET work_mem to '16MB'
+SET maintenance_work_mem to '512MB'
+
+CAST
+     type datetime to timestamp,
+     type tinyint to boolean drop default using tinyint-to-bool;

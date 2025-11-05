@@ -130,6 +130,41 @@ a:hover {
   text-decoration: underline;
 }
 
+#cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #ccc;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+  font-family: sans-serif;
+  display: none;
+  z-index: 1000;
+}
+
+#cookie-banner button {
+  margin: 5px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#accept-all { background: #4CAF50; color: white; }
+#reject-all { background: #f44336; color: white; }
+#customize { background: #555; color: white; }
+
+#cookie-settings {
+  display: none;
+  background: #fafafa;
+  border-top: 1px solid #ccc;
+  padding: 15px;
+}
+
+
 /* Мобильная адаптация */
 @media (max-width: 768px) {
   .filters {
