@@ -12,8 +12,9 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   ssl: {
-    mode: 'REQUIRED'  // para Aiven/Render
+    rejectUnauthorized: false // игнорирует self-signed сертификаты
   }
 });
+
 
 module.exports = pool.promise();
