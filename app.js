@@ -28,8 +28,9 @@ app.use(Sentry.Handlers ? Sentry.Handlers.requestHandler() : (req, res, next) =>
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  ssl: { mode: 'REQUIRED' } // для Aiven/Render
 });
 
 app.use(session({
@@ -121,6 +122,9 @@ app.use('/admin/productos', productosRoutes);
 app.use('/admin/usuarios', usuariosRoutes);
 app.use('/proveedores', proveedoresRoutes);
 app.use('/localizaciones', localizacionesRoutes);
+
+// Доверяем прокси, чтобы Express правильно считывал X-Forwarded-For
+app.set('trust proxy', 1);
 
 // --- Páginas legales ---
 app.get('/aviso-legal', (req, res) => {
