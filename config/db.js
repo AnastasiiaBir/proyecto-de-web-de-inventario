@@ -20,8 +20,8 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   ssl: {
-    mode: 'REQUIRED',
-    rejectUnauthorized: false // только для теста
+    mode: process.env.DB_SSL ? process.env.DB_SSL.replace('ssl-mode=', '') : 'REQUIRED',
+    rejectUnauthorized: false
   }
 });
 
