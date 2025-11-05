@@ -1,5 +1,6 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 
 (async () => {
   console.log('=== Testing Users on Render ===');
@@ -9,29 +10,53 @@ const mysql = require('mysql2/promise');
   console.log('DB_NAME:', process.env.DB_NAME);
   console.log('==============================');
 
+  let pool;
+
   try {
-    const pool = mysql.createPool({
+    pool = mysql.createPool({
       host: process.env.DB_HOST,
       port: process.env.DB_PORT,
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
-      ssl: { mode: 'REQUIRED', rejectUnauthorized: false }
+      ssl: {
+        mode: 'REQUIRED',
+        rejectUnauthorized: false
+      },
+      waitForConnections: true,
+      connectionLimit: 5,
+      queueLimit: 0
     });
 
-    const [rows] = await pool.query('SELECT id, username, email FROM users LIMIT 5'); // первые 5 пользователей
-    console.log('✅ Users fetched:', rows);
+    console.log('🔄 Connecting to DB...');
+    const conn = await pool.getConnection();
+    console.log('✅ DB Connected! Connection ID:', conn.threadId);
 
-    // Пробуем логинить первого пользователя (только тест)
-    if (rows.length > 0) {
-      const user = rows[0];
-      console.log(`Trying login test for user: ${user.username}`);
-      // Здесь можно добавить проверку хеша пароля через bcrypt, если нужно
+    console.log('🔄 Fetching first 5 users from `usuarios`...');
+    const [users] = await pool.query('SELECT id, nombre, apellidos, email, password FROM usuarios LIMIT 5');
+
+    if (users.length === 0) {
+      console.warn('⚠️ No users found in `usuarios` table.');
+    } else {
+      console.log('✅ Users fetched:', users);
+
+      // Пример логина первого пользователя
+      const testUser = users[0];
+      console.log(`🔐 Testing login for user: ${testUser.email}`);
+
+      const inputPassword = 'your_test_password_here'; // временный пароль для теста
+      const isMatch = await bcrypt.compare(inputPassword, testUser.password);
+      console.log(`Password match: ${isMatch}`);
     }
 
-    await pool.end();
-    console.log('✅ Connection closed');
+    conn.release();
   } catch (err) {
     console.error('❌ DB Error:', err.stack || err);
+  } finally {
+    if (pool) {
+      await pool.end();
+      console.log('✅ DB Connection closed');
+    }
+    console.log('=== Script finished ===');
   }
 })();
