@@ -64,6 +64,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Логируем все ошибки перед стандартным error handler
+app.use((err, req, res, next) => {
+  console.error('❌ ERROR IN ROUTE:', req.method, req.originalUrl, err.stack || err);
+  if (!res.headersSent) {
+    res.status(500).send('Algo salió mal!');
+  }
+});
+
 // --- Configuración de la sesión ---
 const sessionStore = new MySQLStore({
   host: process.env.DB_HOST,
