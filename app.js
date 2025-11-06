@@ -9,7 +9,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
-const Sentry = require('@sentry/node');
+// const Sentry = require('@sentry/node');
 // const mysql = require('mysql2');
 
 const app = express();
@@ -45,22 +45,53 @@ app.use((req, res, next) => {
 });
 
 // --- Конфигурация сессий ---
-const sessionStore = new MySQLStore({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  database: process.env.DB_NAME,
-  ssl: { mode: process.env.DB_SSL || 'REQUIRED', rejectUnauthorized: false }
-});
+// Используем _pool, который мы прикрепили в config/db.js
+const mysqlUnderlyingPool = db && db._pool ? db._pool : null;
 
-app.use(session({
+let sessionStore;
+if (mysqlUnderlyingPool) {
+  sessionStore = new MySQLStore({}, mysqlUnderlyingPool);
+  console.log('✅ Session store: using existing DB pool (no duplicate connections)');
+} else {
+  // fallback - если по какой-то причине pool не доступен, используем in-memory временно
+  sessionStore = null;
+  console.warn('⚠️ Warning: DB pool not found for session store. Using memory sessions as fallback.');
+}
+
+// --- Конфигурация сессий ---
+const sessionOptions = {
   key: 'inventario_session',
-  secret: process.env.SESSION_SECRET,
-  store: sessionStore,
+  secret: process.env.SESSION_SECRET || 'fallback_secret',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 60 } // 1 hora
-}));
+};
+
+if (sessionStore) sessionOptions.store = sessionStore;
+
+app.use(session(sessionOptions));
+
+// Логируем ошибки store (если поддерживается)
+if (sessionStore && typeof sessionStore.on === 'function') {
+  sessionStore.on('error', (err) => {
+    console.error('❌ SessionStore error:', err);
+  });
+}
+
+// --- keep-alive ping для предотвращения idle timeouts на Aiven ---
+// делаем простой SELECT 1 каждые 4 минуты
+if (mysqlUnderlyingPool) {
+  setInterval(() => {
+    mysqlUnderlyingPool.query('SELECT 1', (err) => {
+      if (err) {
+        console.warn('DB keep-alive ping failed:', err.code || err.message || err);
+      } else {
+        // тонкий лог, не спамим
+        // console.log('DB keep-alive ok');
+      }
+    });
+  }, 4 * 60 * 1000);
+}
 
 // --- Seguridad y limitación de solicitudes ---
 app.use(helmet({
@@ -161,7 +192,12 @@ app.use((req, res) => {
 
 // --- Обработка ошибок ---
 app.use((err, req, res, next) => {
-  console.error('❌ ERROR CAPTURED:', err.message);
+  console.error('❌ ERROR CAPTURED:', err && err.message ? err.message : err);
+  if (res.headersSent) {
+    // если заголовки уже отправлены — передаём дальше (или log)
+    console.warn('Headers already sent, delegating to default handler.');
+    return next(err);
+  }
   res.status(500).send('Algo salió mal!');
 });
 
@@ -169,7 +205,6 @@ app.locals.io = io;
 io.on('connection', (socket) => {
   console.log('🔌 Cliente conectado');
 });
-
 
 // --- Servidor ---
 const PORT = process.env.PORT || 3000;

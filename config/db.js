@@ -38,4 +38,10 @@ pool.getConnection((err, connection) => {
   }
 });
 
-module.exports = pool.promise();
+// Экспортируем promise-пул (как раньше) — но сохраняем доступ к «raw» pool
+// чтобы можно было передать pool в express-mysql-session (в app.js).
+const promisePool = pool.promise();
+// attach underlying pool for backward compatibility
+promisePool._pool = pool;
+
+module.exports = promisePool;

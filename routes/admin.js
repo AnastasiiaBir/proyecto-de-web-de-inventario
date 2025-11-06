@@ -19,8 +19,9 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    console.log('Multer: archivo subido:', file.originalname, 'renombrado a:', 'admin_' + req.session.user.id + ext);
-    cb(null, 'admin_' + req.session.user.id + ext);
+    const userId = (req.session && req.session.user && req.session.user.id) ? req.session.user.id : 'anon';
+    console.log('Multer: archivo subido:', file.originalname, 'renombrado a:', 'admin_' + userId + ext);
+    cb(null, 'admin_' + userId + ext);
   }
 });
 const upload = multer({ storage });
