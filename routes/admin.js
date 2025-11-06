@@ -26,10 +26,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // --- Dashboard ---
-router.get("/dashboard", isAuthenticated, isAdmin, (req, res, next) => {
-  console.log('GET /dashboard llamado');
-  next();
-}, adminController.getDashboard);
+router.get("/dashboard", isAuthenticated, isAdmin, adminController.getDashboard);
 
 // --- Pedidos ---
 router.get('/pedidos', isAuthenticated, isAdmin, (req,res,next)=>{

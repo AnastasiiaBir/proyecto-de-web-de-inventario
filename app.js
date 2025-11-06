@@ -30,13 +30,13 @@ console.log('PORT:', process.env.PORT);
 console.log('================');
 
 // --- Inicialización de Sentry ---
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  tracesSampleRate: 1.0,
-});
+// Sentry.init({
+  // dsn: process.env.SENTRY_DSN,
+  // tracesSampleRate: 1.0,
+// });
 
 // --- Middleware Sentry для обработки запросов (до маршрутов) ---
-app.use(Sentry.Handlers ? Sentry.Handlers.requestHandler() : (req, res, next) => next());
+// app.use(Sentry.Handlers ? Sentry.Handlers.requestHandler() : (req, res, next) => next());
 
 // --- Middleware логирования всех запросов ---
 app.use((req, res, next) => {
@@ -157,7 +157,7 @@ app.use((req, res) => {
 });
 
 // --- Integración Sentry para errores ---
-app.use(Sentry.Handlers ? Sentry.Handlers.errorHandler() : (err, req, res, next) => next(err));
+// app.use(Sentry.Handlers ? Sentry.Handlers.errorHandler() : (err, req, res, next) => next(err));
 
 // --- Обработка ошибок ---
 app.use((err, req, res, next) => {
