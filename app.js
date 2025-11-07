@@ -93,6 +93,9 @@ if (mysqlUnderlyingPool) {
   }, 4 * 60 * 1000);
 }
 
+// Доверяем прокси, чтобы Express правильно считывал X-Forwarded-For
+app.set('trust proxy', 1);
+
 // --- Seguridad y limitación de solicitudes ---
 app.use(helmet({
   contentSecurityPolicy: {
@@ -164,9 +167,6 @@ app.use('/admin/productos', productosRoutes);
 app.use('/admin/usuarios', usuariosRoutes);
 app.use('/proveedores', proveedoresRoutes);
 app.use('/localizaciones', localizacionesRoutes);
-
-// Доверяем прокси, чтобы Express правильно считывал X-Forwarded-For
-// app.set('trust proxy', 1);
 
 // --- Páginas legales ---
 app.get('/aviso-legal', (req, res) => {
