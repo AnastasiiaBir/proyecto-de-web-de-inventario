@@ -2,32 +2,44 @@ name: keep-awake
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # каждые 5 минут
+    - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
 env:
   END_DATE: '2025-11-13'
+  FETCH_TIMEOUT: '25' # больше времени на пробуждение
 
 jobs:
   wake:
     runs-on: ubuntu-latest
     steps:
-      - name: Проверить срок работы
+      - name: Проверить срок
         run: |
           TODAY=$(date -u +%Y-%m-%d)
           echo "Сегодня: $TODAY"
           if [[ "$TODAY" > "$END_DATE" ]]; then
-            echo "⛔ Срок истёк — workflow отключён."
+            echo "⛔ Срок истёк — выключаюсь"
             exit 0
           fi
 
-      - name: Пинг публичного URL (имитация браузера)
+      - name: Ping Render site (with retries)
         run: |
           PUBLIC_URL="https://proyecto-de-web-de-inventario.onrender.com"
           echo "Ping → $PUBLIC_URL"
-          STATUS=$(curl -A "Mozilla/5.0" -s -o /dev/null -w "%{http_code}" "$PUBLIC_URL" || true)
-          echo "HTTP статус: $STATUS"
-          if [[ "$STATUS" =~ ^2 ]]; then
-            echo "✅ Сервер бодрствует"
-          else
-            echo "⚠️ Сервер ответил не 2xx — $STATUS"
+
+          ATTEMPTS=5
+          for i in $(seq 1 $ATTEMPTS); do
+            STATUS=$(curl -A "Mozilla/5.0" -s --max-time ${FETCH_TIMEOUT} -o /dev/null -w "%{http_code}" "$PUBLIC_URL" || echo "000")
+            echo "Попытка $i → HTTP $STATUS"
+
+            if [[ "$STATUS" =~ ^2 ]]; then
+              echo "✅ Сервер проснулся"
+              exit 0
+            fi
+
+            echo "⏱ Ожидаем 10 секунд и пробуем снова..."
+            sleep 10
+          done
+
+          echo "❌ Сервер не проснулся — FAIL"
+          exit 1
